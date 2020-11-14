@@ -7,23 +7,58 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import frc.robot.RobotMap;
+import frc.robot.TestingDashboard;
+
 public class Climber extends SubsystemBase {
-  public static Climber climber;
+  private static Climber climber;
+  private VictorSPX leftMotor;
+  private VictorSPX rightMotor;
+  private static DoubleSolenoid m_piston;
 
   /**
    * Creates a new Climber.
    */
   private Climber() {
-
+    leftMotor = new VictorSPX(RobotMap.CL_MOTOR_LEFT);
+    rightMotor = new  VictorSPX(RobotMap.CL_MOTOR_RIGHT);
+    m_piston = new DoubleSolenoid(RobotMap.CL_PCM_CAN, RobotMap.CL_PISTON_PORT2, RobotMap.CL_PISTON_PORT5);
   }
 
   public static Climber getInstance() {
     if (climber == null) {
       climber = new Climber();
+      TestingDashboard.getInstance().registerSubsystem(climber, "Climber");
     }
     return climber;
+  }
+
+  public void climb(double speed) {
+    leftMotor.set(ControlMode.PercentOutput, -speed);
+    rightMotor.set(ControlMode.PercentOutput, -speed);
+  }
+
+  public void release(double speed) {
+    leftMotor.set(ControlMode.PercentOutput, speed);
+    rightMotor.set(ControlMode.PercentOutput, speed);
+  }
+
+  public DoubleSolenoid getPiston() {
+    return m_piston;
+  }
+
+  public void lowerClimber() {
+    m_piston.set(DoubleSolenoid.Value.kForward);
+  }
+
+  public void raiseClimber() {
+    m_piston.set(DoubleSolenoid.Value.kReverse);
   }
 
   @Override

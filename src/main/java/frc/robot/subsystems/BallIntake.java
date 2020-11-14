@@ -7,35 +7,52 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotMap;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import frc.robot.RobotMap;
+import frc.robot.TestingDashboard;
+
+public class BallIntake extends SubsystemBase {
+  private static BallIntake m_ballIntake;
+  private static DoubleSolenoid m_piston;
+  private VictorSPX m_intakeRoller;
 
   /**
    * Creates a new Ball Intake subsystem
    */
-public class BallIntake extends SubsystemBase {
-
-  public static BallIntake ballIntake;
-
-  WPI_TalonSRX intakeRoller;
-  WPI_TalonSRX conveyer1;
-  WPI_TalonSRX conveyer2;
-
   private BallIntake() {
-    intakeRoller = new WPI_TalonSRX(RobotMap.B_INTAKE_ROLLER);
-    conveyer1 = new WPI_TalonSRX(RobotMap.B_CONVEYER1);
-    conveyer2 = new WPI_TalonSRX(RobotMap.B_CONVEYER2);
+    m_intakeRoller = new VictorSPX(RobotMap.B_INTAKE_ROLLER);
+    m_piston = new DoubleSolenoid(RobotMap.B_PCM_CAN, RobotMap.B_PISTON_PORT2, RobotMap.B_PISTON_PORT3);
   }
 
   public static BallIntake getInstance() {
-    if (ballIntake == null) {
-      ballIntake = new BallIntake();
+    if (m_ballIntake == null) {
+      m_ballIntake = new BallIntake();
+      TestingDashboard.getInstance().registerSubsystem(m_ballIntake, "BallIntake");
     }
-    return ballIntake;
+    return m_ballIntake;
   }
 
+  public void spinIntakeRoller(double speed) {
+    m_intakeRoller.set(ControlMode.PercentOutput, speed);
+  }
+
+  public DoubleSolenoid getPiston() {
+    return m_piston;
+  }
+
+  public void lowerIntake() {
+    m_piston.set(DoubleSolenoid.Value.kForward);
+  }
+
+  public void raiseIntake() {
+    m_piston.set(DoubleSolenoid.Value.kReverse);
+  }
+ 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run

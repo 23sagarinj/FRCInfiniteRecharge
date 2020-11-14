@@ -5,12 +5,14 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.commands;
+package frc.robot.commands.Drive;
 
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.OI;
+import frc.robot.TestingDashboard;
+import frc.robot.input.AttackThree;
 import frc.robot.input.AttackThree.AttackThreeAxis;
 import frc.robot.subsystems.Drive;
-import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /**
  * A Default Drive commmand that passes joystick input to a TankDrive drivetrain.
@@ -20,17 +22,25 @@ public class DefaultDrive extends CommandBase {
   private final Drive m_drive;
   private final AttackThreeAxis yAxis = AttackThreeAxis.kY;
   private static OI oi;
+  private int counter;
 
   /**
    * Creates a new DefaultDrive.
    *
-   * @param Drive The subsystem used by this command.
+   * @param drive the subsystem used by this command.
    */
   public DefaultDrive(Drive drive) {
     m_drive = drive;
     oi = OI.getInstance();
+    counter = 0;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_drive);
+  }
+
+  public static void registerWithTestingDashboard() {
+    Drive drive = Drive.getInstance();
+    DefaultDrive cmd = new DefaultDrive(Drive.getInstance());
+    TestingDashboard.getInstance().registerCommand(drive, "Basic", cmd);
   }
 
   // Called when the command is initially scheduled. (Unused)
@@ -43,9 +53,24 @@ public class DefaultDrive extends CommandBase {
   public void execute() {
     // NOTE: Forward on the left and right sticks is negative
     //       Backwards is positive, hence the inversion below
-    double leftStick = - oi.getLeftStick().getAxis(yAxis);
-    double rightStick = - oi.getRightStick().getAxis(yAxis);
-    m_drive.tankDrive(leftStick, rightStick);
+    AttackThree leftJoystick = oi.getLeftStick();
+    AttackThree rightJoystick = oi.getRightStick();
+    double leftJoystickSpeed = -leftJoystick.getAxis(yAxis);
+    double rightJoystickSpeed = -rightJoystick.getAxis(yAxis);
+    
+    // Reverses the direction of the drive train upon pressing 2 on the right joystick
+    if (rightJoystick.getRawButtonPressed(2)) {
+      counter++;
+    }
+    if (counter % 2 == 1) {
+      leftJoystickSpeed = rightJoystick.getAxis(yAxis);
+      rightJoystickSpeed = leftJoystick.getAxis(yAxis);
+    }
+    else {
+      leftJoystickSpeed = -leftJoystick.getAxis(yAxis);
+      rightJoystickSpeed = -rightJoystick.getAxis(yAxis);
+    }
+    m_drive.tankDrive(leftJoystickSpeed, rightJoystickSpeed);
   }
 
   // Called once the command ends or is interrupted. (Unused)
@@ -54,7 +79,7 @@ public class DefaultDrive extends CommandBase {
   }
 
   // Returns true when the command should end.
-  //Default Command so will never finish running.
+  // Default command so will never finish running.
   @Override
   public boolean isFinished() {
     return false;
